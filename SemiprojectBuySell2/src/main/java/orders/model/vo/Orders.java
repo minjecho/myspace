@@ -20,12 +20,13 @@ public class Orders implements java.io.Serializable {
 	private String phone;
 	private int delFee;
 	private String payment;
+	private String etc;
 	
 	// Constructor
 	public Orders() {}
 
 	public Orders(int ordersNo, int userNo, int itemNo, String userID, Date purDate, int count, String progress,
-			int price, String address, int size, String phone, int delFee, String payment) {
+			int price, String address, int size, String phone, int delFee, String payment, String etc) {
 		super();
 		this.ordersNo = ordersNo;
 		this.userNo = userNo;
@@ -40,6 +41,7 @@ public class Orders implements java.io.Serializable {
 		this.phone = phone;
 		this.delFee = delFee;
 		this.payment = payment;
+		this.etc = etc;
 	}
 
 	// Getter & Setter
@@ -149,6 +151,14 @@ public class Orders implements java.io.Serializable {
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+	
+	public void setEtc(String etc) {
+		this.etc = etc;
+	}
+	
+	public String getEtc() {
+		return etc;
 	}
 
 	// toString()

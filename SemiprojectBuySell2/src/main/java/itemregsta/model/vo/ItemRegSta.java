@@ -14,11 +14,12 @@ public class ItemRegSta implements java.io.Serializable {
 	private int size;
 	private java.sql.Date regDate;
 	private int price;
+	private String address;
 	
 	// Constructor
 	public ItemRegSta() {}
 
-	public ItemRegSta(int regNo, int userNo, String userID, int itemNo, int size, Date regDate, int price) {
+	public ItemRegSta(int regNo, int userNo, String userID, int itemNo, int size, Date regDate, int price, String address) {
 		super();
 		this.regNo = regNo;
 		this.userNo = userNo;
@@ -27,6 +28,7 @@ public class ItemRegSta implements java.io.Serializable {
 		this.size = size;
 		this.regDate = regDate;
 		this.price = price;
+		this.address = address;
 	}
 
 	// Getter & Setter
@@ -88,6 +90,14 @@ public class ItemRegSta implements java.io.Serializable {
 
 	public static long getSerialversionuid() {
 		return serialVersionUID;
+	}
+	
+	public String getAddress() {
+		return address;
+	}
+	
+	public void setAddress(String address) {
+		this.address = address;
 	}
 
 	// toString()

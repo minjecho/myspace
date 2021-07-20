@@ -1,5 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+    pageEncoding="UTF-8" import="loginPage.model.vo.Login, itemPage.model.vo.Item"%>
+<% 
+	// 로그인 확인을 위한 session 객체 사용
+	// 상품 정보 조회를 위한 session 객체 사용
+	// 이 부분은 추후 머지하면서 수정해주세요.
+	Login loginmember = new Login();
+	Item item = new Item();
+%>
 <!DOCTYPE html>
 <html lang="zxx" class="no-js">
 <head>
@@ -30,6 +37,14 @@
 <link rel="stylesheet" href="/bsp/resources/css/ion.rangeSlider.css" />
 <link rel="stylesheet" href="/bsp/resources/css/ion.rangeSlider.skinFlat.css" />
 <link rel="stylesheet" href="/bsp/resources/css/main.css">
+
+<!-- jQuery와 Postcodify를 로딩한다. -->
+<script>
+	/*  검색 단추를 누르면 팝업 레이어가 열리도록 설정한다. */
+	function searchaddress(){
+		$("#postcodify_search_button").postcodifyPopUp();
+	}
+</script>
 </head>
 <body>
 	<%-- Menubar --%>
@@ -70,78 +85,47 @@
 	</div>
 	<section class="checkout_area section_gap">
 		<div class="container">
-			<div class="cupon_area">
-				<div class="check_title">
-					<h2>
-						포인트 사용하기 <a href="#">(잔여 포인트 조회하기)</a>
-					</h2>
-				</div>
-				<input type="text" placeholder="사용할 포인트를 입력해주세요.">
-				<a class="tp_btn" href="#">포인트 적용</a>
-			</div>
 			<div class="billing_details">
 				<div class="row">
 					<div class="col-lg-8">
-						<h3>배송지 입력</h3>
-						<form class="row contact_form" action="#" method="post" novalidate="novalidate">
+						<form class="row contact_form" action="/bsp/reginsert" method="post" novalidate="novalidate">
+							<input type="hidden" name="userno" value="<%= loginmember.getUserNo() %>">
+							<input type="hidden" name="userid" value="<%= loginmember.getUserId() %>">
+							<input type="hidden" name="itemno" value="<%= item.getItemNo() %>">
 							<div class="col-md-6 form-group p_star">
-								<input type="text" class="form-control" id="name" name="name">
-								<span class="placeholder" data-placeholder="이름"></span>
-							</div>
-							<div class="col-md-6 form-group p_star">
-								<input type="text" class="form-control" id="number" name="number">
-								<span class="placeholder" data-placeholder="전화번호"></span>
-							</div>
-							<div class="col-md-6 form-group p_star">
-								<input type="text" class="form-control" id="email" name="email">
-								<span class="placeholder" data-placeholder="Email 주소"></span>
-							</div>
-							<div class="col-md-12 form-group p_star">
-								<select class="country_select">
-									<option>-- 지역 --</option>
-									<option value="서울">서울</option>
-									<option value="경기">경기</option>
-									<option value="강원">강원</option>
-								</select>
-							</div>
-							<div class="col-md-12 form-group p_star">
-								<select class="country_select">
-									<option>-- 시/군/구 --</option>
-									<option value="1">District</option>
-									<option value="2">District</option>
-									<option value="4">District</option>
-								</select>
-							</div>
-							<div class="col-md-12 form-group p_star">
-								<input type="text" class="form-control" id="add1" name="add1">
-								<span class="placeholder" data-placeholder="상세주소 입력"></span>
-							</div>
-							<div class="col-md-12 form-group">
-								<div class="creat_account">
-									<h3>배송 요청사항</h3>
-								</div>
-								<textarea class="form-control" name="message" id="message" rows="1" placeholder="배송시 요청사항(예:부재시 문 앞에 놓아주세요.)"></textarea>
+								<h3>판매 상품 정보 입력</h3>
+								<input type="text" class="form-control" id="itemname" name="itemname" placeholder="제품명" value="이곳에는 선택한 상품의 제품명이 들어갑니다." required><br>
+								<input type="number" class="form-control" id="size" name="size" placeholder="Size" required><br>
+								<input type="number" class="form-control" id="price" name="price" placeholder="희망 판매가" required>
+								<br>
+								<h3>반품 배송지 입력</h3>
+								<input type="text" class="form-control" id="username" name="username" placeholder="이름" value="<%= loginmember.getUserName() %>" required><br>
+								<input type="tel" class="form-control" id="phone" name="phone" placeholder="전화번호" required><br>
+								<input type="email" class="form-control" id="email" name="email" placeholder="이메일" required><br>
+								<input type="text" class="form-control postcodify_postcode5" id="post" name="post" placeholder="우편번호" required>
+								<button type="button" id="postcodify_search_button" onclick="searchaddress();">검색</button><br><br>
+								<input type="text" class="form-control postcodify_address" id="address" name="address" placeholder="주소" required><br>
+								<input type="text" class="form-control postcodify_extra_info" id="detailaddress" name="detailaddress" placeholder="상세주소" required><br>
 							</div>
 						</form>
 					</div>
 					<div class="col-lg-4">
 						<div class="order_box">
-							<h2>Your Order</h2>
+							<h2>등록 상품</h2>
 							<ul class="list">
-								<li><a href="#">Product <span>Total</span></a></li>
-								<li><a href="#">Fresh Blackberry <span class="middle">x 02</span> <span class="last">$720.00</span></a></li>
-								<li><a href="#">Fresh Tomatoes <span class="middle">x 02</span> <span class="last">$720.00</span></a></li>
-								<li><a href="#">Fresh Brocoli <span class="middle">x 02</span> <span class="last">$720.00</span></a></li>
+								<li><a href="#">제품명 <span>가격</span></a></li>
+								<li><a href="#">슈즈곤 신발 1 <span class="last">150000 </span></a></li>
 							</ul>
 							<ul class="list list_2">
-								<li><a href="#">Subtotal <span>$2160.00</span></a></li>
-								<li><a href="#">Shipping <span>Flat rate: $50.00</span></a></li>
-								<li><a href="#">Total <span>$2210.00</span></a></li>
+								<li><a>배송비 <span>2500</span></a></li>
+								<li><a>Total <span>152500</span></a></li>
 							</ul>
+							<hr>
 							<div class="payment_item">
+								<h2>패널티 결제방법</h2>
 								<div class="radion_btn">
-									<input type="radio" id="f-option5" name="selector">
-									<label for="f-option5">Check payments</label>
+									<input type="radio" id="f-option5" name="account">
+									<label for="f-option5">계좌에서 인출</label>
 									<div class="check"></div>
 								</div>
 								<p>
@@ -151,8 +135,8 @@
 							</div>
 							<div class="payment_item active">
 								<div class="radion_btn">
-									<input type="radio" id="f-option6" name="selector">
-									<label for="f-option6">Paypal </label>
+									<input type="radio" id="f-option6" name="creditcard">
+									<label for="f-option6">신용카드 </label>
 									<img src="/bsp/resources/img/product/card.jpg" alt="">
 									<div class="check"></div>
 								</div>
@@ -162,11 +146,11 @@
 								</p>
 							</div>
 							<div class="creat_account">
-								<input type="checkbox" id="f-option4" name="selector">
-								<label for="f-option4">I’ve read and accept the </label>
-								<a href="#">terms & conditions*</a>
+								<input type="checkbox" id="f-option4" name="selector" required="required">
+								<label for="f-option4"><a href="#">검수 기준</a>과 <a href="#">개인 정보 정책</a>에 동의합니다. </label>
 							</div>
-							<a class="primary-btn" href="/bsp/views/sell/sell_complete.jsp">결제하기</a>
+							<input type="submit" value="상품 등록하기"> &nbsp;
+							<input type="reset" value="등록취소">
 						</div>
 					</div>
 				</div>
@@ -193,5 +177,6 @@
 	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCjCGmQ0Uq4exrzdcL6rvxywDDOvfAu6eE"></script>
 	<script src="/bsp/resources/js/gmaps.min.js"></script>
 	<script src="/bsp/resources/js/main.js"></script>
+	<script src="//d1p7wdleee1q2z.cloudfront.net/post/search.min.js"></script>
 </body>
 </html>

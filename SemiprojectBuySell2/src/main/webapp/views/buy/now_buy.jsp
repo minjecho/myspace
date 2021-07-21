@@ -102,11 +102,12 @@
 				<div class="row">
 					<div class="col-lg-8">
 						<h3>배송지 입력</h3>
-						<form class="row contact_form" action="#" method="post" novalidate="novalidate">
+						<form class="row contact_form" action="/bsp/orderinsert" method="post" novalidate="novalidate">
 							<input type="hidden" name="userno" value="<%= loginmember.getUserNo() %>">
 							<input type="hidden" name="userid" value="<%= loginmember.getUserId() %>">
 							<input type="hidden" name="itemno" value="<%= item.getItemNo() %>">
 							<div class="col-md-6 form-group p_star">
+								<input type="number" class="form-control" id="size" name="size" placeholder="사이즈" required><br>
 								<input type="text" class="form-control" id="username" name="username" placeholder="이름" value="<%= loginmember.getUserName() %>" required><br>
 								<input type="tel" class="form-control" id="phone" name="phone" placeholder="전화번호" value="<%= loginmember.getPhone() %>" required><br>
 								<input type="email" class="form-control" id="email" name="email" placeholder="이메일" value="<%= loginmember.getEmail() %>" required><br>
@@ -148,7 +149,7 @@
 							</div>
 							<div class="payment_item active">
 								<div class="radion_btn">
-									<input type="radio" id="f-option6" name="selector">
+									<input type="radio" id="f-option6" name="payment" value="card" required>
 									<label for="f-option6">Paypal </label>
 									<img src="/bsp/resources/img/product/card.jpg" alt="">
 									<div class="check"></div>
@@ -159,7 +160,7 @@
 								</p>
 							</div>
 							<div class="creat_account">
-								<input type="checkbox" id="f-option4" name="selector" required="required">
+								<input type="radio" id="f-option4" name="payment" value="account" required>
 								<label for="f-option4"><a href="#">검수 기준</a>과 <a href="#">개인 정보 정책</a>에 동의합니다. </label>
 							</div>
 							<input type="submit" value="상품 등록하기"> &nbsp;

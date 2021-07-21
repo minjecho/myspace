@@ -23,6 +23,19 @@ public class OrdersService {
 	}
 	
 	// 새 주문용 메소드
+	public int insertOrders(Orders orders) {
+		Connection conn = getConnection();
+		int result = odao.insertOrders(conn, orders);
+		
+		if(result > 0) {
+			commit(conn);
+		}else {
+			rollback(conn);
+		}
+		close(conn);
+		
+		return result;
+	}
 	
 	// 주문 취소용 메소드
 	

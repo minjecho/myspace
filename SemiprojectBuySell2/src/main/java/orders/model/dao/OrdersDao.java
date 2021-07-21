@@ -64,6 +64,37 @@ public class OrdersDao {
 	// 해당 주문 번호의 정보 출력용 메소드
 	
 	// 새 주문용 메소드
+	public int insertOrders(Connection conn, Orders orders) {
+		int result = 0;
+		PreparedStatement ps = null;
+		
+		String query = "insert into orders values("
+						+ "order_seq.nextval, ?, ?, ?, sysdate, 1, '준비중', ?, "
+						+ "?, ?, ?, 2500, ?, ?)";
+		
+		try {
+			ps = conn.prepareStatement(query);
+			
+			ps.setInt(1, orders.getUserNo());
+			ps.setInt(2, orders.getItemNo());
+			ps.setString(3, orders.getUserID());
+			ps.setInt(4, orders.getPrice());
+			ps.setString(5, orders.getAddress());
+			ps.setInt(6, orders.getSize());
+			ps.setString(7, orders.getPhone());
+			ps.setString(8, orders.getPayment());
+			ps.setString(9, orders.getEtc());
+			
+			result = ps.executeUpdate();
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			close(ps);
+		}
+		
+		return result;
+	}
 	
 	// 주문 취소용 메소드
 	

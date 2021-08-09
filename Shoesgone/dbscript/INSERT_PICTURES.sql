@@ -1,0 +1,1 @@
+INSERT INTO PICTURES VALUES(PICTURES_SEQ.NEXTVAL, 'C:\Users\USER\Desktop\shesgone\data\shoes_images\DD1391-100_0.png');

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fileMapper">
+
+	<!-- UserInfo 객체에 대한 정보 -->
+	<resultMap id="resultUserInfo" type="UserInfo">
+		<id column="user_no" property="user_no"/>
+		<result column="user_id" property="user_id"/>
+		<result column="user_nn" property="user_nn"/>
+		<result column="user_name" property="user_name"/>
+		<result column="user_pwd" property="user_pwd"/>
+		<result column="age" property="age"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+		<result column="phone" property="phone"/>
+		<result column="address" property="address"/>
+		<result column="interest" property="interest"/>
+		<result column="login_ok" property="login_ok"/>
+		<result column="admin" property="admin"/>
+	</resultMap>
+	
+	<resultMap type="TFile" id="resultFile">
+		<id column="file_num" property="file_num" />
+		<result column="team_num" property="team_num" />
+		<result column="file_uploader" property="file_uploader" />
+		<result column="file_originalfilename" property="file_originalfilename" />
+		<result column="file_renamefilename" property="file_renamefilename" />
+		<result column="file_reg_date" property="file_reg_date" />
+		<association property="userVO" resultMap="resultUserInfo" />
+	</resultMap>
+	
+	<select id="selectAll" parameterType="_int" resultMap="resultFile">
+		select file_num, team_num, file_uploader, ui.user_nn, file_originalfilename, file_renamefilename, file_reg_date 
+        from tb_file f 
+        left join user_info ui on (f.file_uploader = ui.user_no) 
+        where team_num = #{ team_num } and file_num > 0
+        order by file_reg_date desc
+	</select>
+
+	<insert id="insertFile" parameterType="TFile">
+	insert into tb_file 		
+			(file_num, team_num, file_uploader, 
+			file_originalfilename, file_renamefilename, file_reg_date)
+			values ((select max(file_num) + 1 from tb_file), #{ team_num }, #{ file_uploader }, 
+					#{ file_originalfilename }, #{ file_renamefilename }, sysdate)	
+	</insert>
+	
+	<select id="selectFile" parameterType="_int" resultMap="resultFile">
+		select * from tb_file
+		where file_num = #{ file_num }
+	</select>
+	
+	<update id="updateFile" parameterType="TFile">
+		update tb_file
+		set team_num = #{ team_num },
+		   file_uploader = #{ file_uploader }
+		   <if test="file_originalfilename != null">
+		   , file_originalfilename = #{ file_originalfilename }
+		   , file_renamefilename = #{ file_renamefilename }
+		   </if>
+		   <if test="file_originalfilename == null">
+		   , file_originalfilename = null
+		   , file_renamefilename = null
+		   </if>
+		where file_num = #{ file_num } 
+	</update>
+	
+	<delete id="deleteFile" parameterType="TFile">
+		delete from tb_file
+		where file_num = #{ file_num }
+	</delete>
+	
+	<select id="selectFileRecentList" parameterType="_int" resultMap="resultFile">
+		select *
+		from (select rownum, file_num, team_num, file_uploader, ui.user_nn, file_originalfilename, file_renamefilename, file_reg_date 
+		        from tb_file f 
+		        left join user_info ui on (f.file_uploader = ui.user_no) 
+		        where team_num = #{ team_num } and file_num > 0 
+		        order by file_reg_date desc) 
+		where rownum between 1 and 10
+	</select>
+
+</mapper>

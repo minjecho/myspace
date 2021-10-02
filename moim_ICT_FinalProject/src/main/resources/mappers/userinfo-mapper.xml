@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="userinfoMapper">
+
+	<!-- Board 객체에 대한 정보 -->
+	<resultMap id="resultUser" type="UserInfo">
+		<id column="user_no" property="user_no"/>
+		<result column="user_id" property="user_id"/>
+		<result column="user_nn" property="user_nn"/>
+		<result column="user_name" property="user_name"/>
+		<result column="user_pwd" property="user_pwd"/>
+		<result column="age" property="age"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+		<result column="phone" property="phone"/>
+		<result column="address" property="address"/>
+		<result column="interest" property="interest"/>
+		<result column="login_ok" property="login_ok"/>
+		<result column="admin" property="admin"/>
+	</resultMap>
+	
+	<!-- 비밀번호 암호화를 사용하는 로그인 -->
+	<select id="selectLogin" parameterType="UserInfo" resultMap="resultUser">
+		select * from user_info
+		where user_id = #{ user_id }
+	</select>
+	
+	<!-- 관리자 페이지 - 전체 회원 목록 조회 -->
+	<select id="selectUserList" resultMap="resultUser">
+		select * from user_info
+	</select>
+	
+	<!-- 관리자 페이지 - 전체 회원수 조회 -->
+	<select id="getListCount" resultType="int">
+		select count(*) from user_info
+	</select>
+	
+	<!-- 유저 한 명의 정보 조회 -->
+	<select id="selectUser" parameterType="int" resultMap="resultUser">
+		select * from user_info where user_no = #{user_no}
+	</select>
+	
+	<!-- 유저 한 명의 로그인 가능 여부 변경 -->
+	<update id="updateUserLoginOK" parameterType="UserInfo">
+		update user_info
+		set login_ok = #{login_ok}
+		where user_no = #{user_no}
+	</update>
+	
+	<!-- 유저 한 명의 관리자 여부 변경 -->
+	<update id="updateUserAdmin" parameterType="UserInfo">
+		update user_info
+		set admin = #{admin}
+		where user_no = #{user_no}
+	</update>
+	
+	<!-- 회원이름으로 검색 -->
+	<select id="searchUserName" parameterType="String" resultMap="resultUser">
+		select * from user_info where user_name like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 닉네임으로 검색 -->
+	<select id="searchUserNickname" parameterType="String" resultMap="resultUser">
+		select * from user_info where user_nn like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 이메일로 검색 -->
+	<select id="searchUserEmail" parameterType="String" resultMap="resultUser">
+		select * from user_info where email like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 관리자 페이지 - 회원 강제 탈퇴 -->
+	<delete id="deleteUserAdmin" parameterType="int">
+		delete from user_info where user_no = #{user_no}
+	</delete>
+
+	<!-- id 중복체크 -->
+	<select id="selectCheckId" parameterType="String" resultType="int" >
+		select count(*) from user_info where user_id = #{user_id}
+	</select>
+	
+	<!-- nn 중복체크 -->
+	<select id="selectCheckNn" parameterType="String" resultType="int" >
+		select count(*) from user_info where user_nn = #{user_nn}
+	</select>
+	
+	<!-- Search Id -->
+	<select id="searchId1" parameterType="UserInfo" resultMap="resultUser">
+		select * from user_info where user_name=#{user_name} and phone=#{phone}
+	</select>
+	<select id="searchId2" parameterType="UserInfo" resultMap="resultUser">
+		select * from user_info where user_name=#{user_name} and email=#{email}
+	</select>
+	
+	<!-- Search Pwd -->
+	<select id="searchPwd" parameterType="String" resultMap="resultUser">
+		select * from user_info where user_id=#{user_id} and phone=#{phone} and email=#{email}
+	</select>
+	
+	<!-- update Pwd -->
+	<update id="updatePwd" parameterType="String">
+		update user_info set user_pwd = #{ user_pwd } where user_id = #{user_id}
+	</update>
+	
+	<!-- 회원 탈퇴 -->
+	<delete id="deleteUser" parameterType="int">
+		delete from user_info where user_no = #{user_no}
+	</delete>
+	
+	<!-- 회원가입 -->
+	<insert id="insertUserInfo" parameterType="UserInfo">
+		insert into user_info
+		(user_no, user_id, user_nn, user_name, 
+		user_pwd, age, gender, email, phone, address, interest,
+		login_ok, admin)
+		values ((select max(user_no) + 1 from user_info), #{ user_id }, #{ user_nn }, #{ user_name }, 
+		#{ user_pwd }, #{ age }, #{ gender }, #{ email }, #{ phone }, #{ address }, 
+		#{ interest }, default, default)
+	</insert>
+	
+	<update id="updateUserInfo" parameterType="UserInfo">
+		update user_info
+		set user_nn = #{ user_nn },
+		user_name = #{ user_name },
+		user_pwd = #{ user_pwd },
+		age = #{ age },
+		gender = #{ gender },
+		email = #{ email },
+		phone = #{ phone },
+		address = #{ address }
+		where user_no = #{ user_no }
+	</update>
+	
+	<select id="selectUserInfo" parameterType="UserInfo" resultMap="resultUser">
+		select * from user_info
+		where user_id = #{user_id} and
+		phone = #{phone} and
+		email = #{email}
+	</select>
+	
+</mapper>

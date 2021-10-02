@@ -1,0 +1,152 @@
+[스프링 - 뷰 요약]
+Spring MVC에서 View는 사용자에게 결과를 랜더링하여 보여주는 Bean이다.
+
+- InternalResourceViewResolver 
+  : 논리적인 View 이름을 사용하여 템플릿 파일 장원을 사용하여 랜더링 되는 View 객체를 결정한다.
+- BeanNameViewResolver 
+  : 논리적인 View 이름을 사용해 DispatcherServlet의 어플리케이션 컨텍스트에 있는 View Bean을 결정한다.
+- ResourceBundleViewResolver 
+  : 논리적인 View 이름을 사용해 ResourceBundle에 포함돼있는 View를 결정한다.
+- XmlViewResolver 
+  : DispatcherServlet의 어플리케이션 컨텍스트와는 별도로, XML 파일로부터 View Bean을 결정한다.
+
+
+1) 템플릿 뷰의 사용
+
+InternalResourceViewResolver는 
+웹 어플리케이션 컨텍스트에 존재하는 템플릿에게 랜더링에 대한 책임을 위임하는 View 객체를 
+논리적으로 View 이름을 사용하여 결정한다.
+이는 ModelAndView 객체로부터 리턴된 논리적인 이름을 취하고, 
+여기에 웹 어플리케이션 내의 템플릿의 경로에 도달하기 위한 접두어와 접미어를 붙이는 것으로 가능하다.
+
+<bean id="viewResolver" 
+     class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    <property name="viewClass">
+        <value>org.springframework.web.servlet.view.InternalResourceView</value>
+    </property>
+    <property name="prefix"><value>/WEB-INF/jsp/</value></property>
+    <property name="suffix"><value>.jsp</value></property>
+</bean>
+
+/WEB-INF/jsp/courseDetail.jsp
+/WEB-INF/jsp/ : 접두어, courseDetail : 논리적인 뷰 이름, .jsp : 접미어
+
+View 객체는 기본적으로 InternalResourceViewResolver인데, 
+이 객체는 실제 랜더링을 수행할 JSP에 단순히 요청을 전달하는 일을 한다.
+만약 JSTL 태그를 사용한다면 viewClass 특성을 설정함으로써 
+InternalResourceView를 JstlView로 대체해야 한다. 
+JstlView도 요청을 JSP에 전달한다.
+
+<bean id="viewResolver" 
+     class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+    <property name="viewClass">
+        <value>org.springframework.web.servlet.view.JstlView</value>
+    </property>
+    <property name="prefix"><value>/WEB-INF/jsp/</value></property>
+    <property name="suffix"><value>.jsp</value></property>
+</bean>
+
+
+2) 뷰 빈 결정
+
+JSP나 그 밖의 자원에 의해 표현되는 View가 아닐경우 
+InternalResourceViewResolver 대신 다른 뷰 리졸버를 선택하는 것이 좋다.
+BeanNameViewResolver는 
+논리적인 뷰 이름을 어플리케이션 컨텍스트의 Bean 이름과 부합시키는 뷰 리졸버이다.
+
+<bean id="beanNameViewResolver" 
+     class="org.springframework.web.servlet.view.BeanNameViewResolver" />
+
+위의 설정 후 컨트롤러가 특정 논리적인 View 이름과 함께 ModelAndView를 리턴하면, 
+BeanNameViewResolver는 논리적인 View 이름의 Bean을 찾는다.
+
+<bean id="courseList" class="com.springinaction.training.mvc.CourseListPdfView" />
+
+
+■ 별도의 XML 파일에서 뷰 빈 선언
+
+View Bean을 메인 어플리케이션 컨텍스트에서 찾는 대신 별도의 XML 파일에 의뢰한다.
+
+<bean id="viewResolver" class="org.springframework.web.servlet.view.XmlViewResolver">
+    <property name="location">
+        <value>/WEB-INF/training-views.xml</value>
+    </property>
+</bean>
+
+XmlViewResolver는 기본적으로 WEB-INF/views.xml에서 View의 정의를 찾는다.
+그러나 여기서는 location 특성에 /WEB-INF/training-views.xml 을 지정하여 기본 값을 재정의 했다. 
+XmlViewResolver는 DispatcherSevlet의 컨텍스트 설정 파일에 다수의 View Bean을 선언하는 경우에 
+유용하다.
+메인 컨텍스트 설정 파일을 깨끗하고 깔끔하게 유지하기 위해서는 
+View의 선언을 나머지 Bean으로부터 분리해야 할 필요가 있다.
+
+
+■ 리소스 번들을 사용한 뷰 결정
+
+프로퍼티 파일에서 View의 정의를 관리한다. 
+프로퍼티 파일을 사용함으로써 ResourceBundleViewResolver는 국제화와 관련한 이점을 갖는다.
+다른 View 리졸버는 항상 논리적인 View 이름을 사용하여 단일한 View 구현 객체를 결정하는 반면, 
+ResourceBundleViewResolver는 
+사용자의 Locale을 기초로 하여 동일한 논리적인 뷰 이름으로 서로 다른 View 구현 객체를 리턴할 수 있다.
+
+<bean id="bundleViewResolver" 
+     class="org.springframework.web.servlet.view.ResourceBundleViewResolver">
+    <property name="basename">
+        <value>views</value>
+    </property>
+</bean>
+
+basename 특성은 View 정의를 담고 있는 프로퍼티 파일의 이름을 어떻게 구성할지를 
+ResourceBundleViewResolver에게 알려준다.
+여기서는 views라는 값을 지정했으므로 기본적으로는 views.properties에, 
+미국은 views_en_US.properties, 프랑스는 views_fr_FR.properties 등으로 정의할 수 있다.
+views.properties 에 JSP기반 템플릿을 설정할 경우, 
+
+courseList.class=org.springframework.web.servlet.view.JstlView
+courseList.url=/WEB-INF/jsp/courseList.jspz
+
+views_en_US.properties 에 PDF기반 템플릿을 설정할 경우,
+courseList.class=com.paringinaction.training.mvc.CourseListPdfViewz
+
+views_fr_FR.properties 에 EXCEL기반 템플릿을 설정할 경우,
+courseList.class=com.paringinaction.training.mvc.CourseListExcelView
+
+
+3) 뷰 리졸버 선택
+
+일반적으로 사용하기 쉬우며 간결한 InternalResourceViewResolver 사용을 권한다.
+BeanNameViewResolver와 XmlViewResolver 사이의 선택에 있어서는, 
+DispatcherServlet의 컨텍스트 파일의 크기를 심각하게 증가시키지 않는 
+View Bean을 가지고 있는 경우에 는 BeanNameViewResolver를 
+그 반대일 경우엔 XmlViewResolver를 선택하도록 한다.
+국제화에 따른 뷰 랜더링의 경우엔 ResourceBundleViewResolver.
+
+
+■ 다중 리졸버 사용
+
+다중 뷰 리졸버를 사용하기 위해서는 단순히 컨텍스트 설정 파일에서 필요한 뷰 리졸버 Bean을 선언해 준다.
+
+//---------------------------------------------------------------------------------------------
+[Spring MVC 에러처리]
+
+Spring MVC는 Controller 내에서 발생하는 에러 처리를 지원하기 위하여 
+ExceptionResolver를 두고 있다.
+
+ExceptionResolver를 이용하여 에러를 처리하고자 한다면 
+먼저 Bean 설정 파일에 다음과 같이 설정해줘야 한다.
+
+<< 설정 파일 : action-servlet.xml >>
+
+<bean id="exceptionResolver" 
+class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+    <property name="exceptionMappings">
+        <props>
+            <prop key="com.xxx.user.ExistedUserException">defaultErrorMessage</prop>
+            <prop key="com.xxx.user.UserNotFoundException">
+                defaultErrorMessage
+            </prop>
+         </props>
+    </property>
+    <property name="exceptionAttribute" value="sampleException" />
+    <property name="defaultErrorView" value="error" />
+</bean>

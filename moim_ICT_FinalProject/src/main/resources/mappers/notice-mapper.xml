@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="noticeMapper">
+
+	<!-- UserInfo 객체에 대한 정보 -->
+	<resultMap id="resultUserInfo" type="UserInfo">
+		<id column="user_no" property="user_no"/>
+		<result column="user_id" property="user_id"/>
+		<result column="user_nn" property="user_nn"/>
+		<result column="user_name" property="user_name"/>
+		<result column="user_pwd" property="user_pwd"/>
+		<result column="age" property="age"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+		<result column="phone" property="phone"/>
+		<result column="address" property="address"/>
+		<result column="interest" property="interest"/>
+		<result column="login_ok" property="login_ok"/>
+		<result column="admin" property="admin"/>
+	</resultMap>
+
+	<!-- Notice 객체에 대한 정보 -->
+	<resultMap id="resultNotice" type="Notice">
+		<id column="notice_no" property="notice_no"/>
+		<result column="user_no" property="user_no"/>
+		<result column="notice_title" property="notice_title"/>
+		<result column="notice_content" property="notice_content"/>
+		<result column="notice_date" property="notice_date"/>
+		<result column="notice_original_filename" property="notice_original_filename"/>
+		<result column="notice_rename_filename" property="notice_rename_filename"/>
+		<association property="userVO" resultMap="resultUserInfo" />
+	</resultMap>
+	
+	<!-- 최신 5개의 공지에 대한 정보 -->
+	<resultMap id="resultNoticeNew5" type="Notice">
+		<id column="notice_no" property="notice_no"/>
+		<result column="notice_title" property="notice_title"/>
+		<result column="notice_date" property="notice_date"/>
+	</resultMap>
+
+	<!-- 공지사항의 글 갯수 조회 -->
+	<select id="selectListCount" resultType="int">
+		select count(*) from notice
+	</select>
+	
+	<!-- 공지사항 전체 리스트 조회 -->
+	<select id="selectList" parameterType="Page" resultMap="resultNotice">
+		select * from
+		(select rownum rnum, notice_no, user_no, notice_title, notice_content, notice_date, notice_original_filename, notice_rename_filename
+		from (select * from notice
+			  order by notice_no desc)) n
+		left join user_info u on (n.user_no = u.user_no)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<!-- 해당 번호의 공지사항 조회 -->
+	<select id="selectNotice" parameterType="int" resultMap="resultNotice">
+		select * from notice
+		where notice_no = #{ notice_no }
+	</select>
+	
+	<!-- 공지사항 등록 -->
+	<insert id="insertNotice" parameterType="Notice">
+		insert into notice values(
+			(select max(notice_no) + 1 from notice), #{user_no}, #{notice_title}, #{notice_content}, sysdate, 
+			#{notice_original_filename}, #{notice_rename_filename}
+		)
+	</insert>
+	
+	<!-- 공지사항 수정 -->
+	<update id="updateNotice" parameterType="Notice">
+		update notice
+		set notice_title = #{notice_title}, notice_content = #{notice_content}
+		<if test="notice_original_filename != null">
+			, notice_original_filename = #{notice_original_filename}, notice_rename_filename = #{notice_rename_filename}
+		</if>
+		<if test="notice_original_filename == null">
+			, notice_original_filename = null, notice_rename_filename = null
+		</if>
+		where notice_no = #{notice_no}
+	</update>
+	
+	<!-- 공지사항 삭제 -->
+	<delete id="deleteNotice" parameterType="int">
+		delete from notice where notice_no = #{notice_no}
+	</delete>
+	
+	<!-- 제목 키워드로 공지사항 검색 -->
+	<select id="selectSearchNotice" parameterType="String" resultMap="resultNotice">
+		select * from notice where notice_title like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 최근 5개의 공지사항 메인페이지에 출력 -->
+	<select id="selectNewTop5" resultMap="resultNoticeNew5">
+		select * from
+		(select rownum rnum, notice_no, notice_title, notice_date
+		from (select * from notice order by notice_date desc))
+		where rnum between 1 and 5
+	</select>
+</mapper>

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tpmainMapper">
+
+	<resultMap id="resultTeam" type="Team">
+		<id column="team_num" property="team_num"/>
+		<result column="field_num" property="field_num"/>
+		<result column="team_name" property="team_name"/>
+		<result column="team_intro" property="team_intro"/>
+		<result column="team_leader_intro" property="team_leader_intro"/>
+		<result column="team_original_image" property="team_original_image"/>
+		<result column="team_rename_image" property="team_rename_image"/>
+		<result column="team_level" property="team_level"/>
+		<result column="team_local" property="team_local"/>
+		<result column="team_act_day" property="team_act_day"/>
+		<result column="team_act_week" property="team_act_week"/>
+		<result column="team_act_time" property="team_act_time"/>
+		<result column="team_fee" property="team_fee"/>
+		<result column="team_limit" property="team_limit"/>
+		<result column="team_recruit" property="team_recruit"/>
+	</resultMap>
+	
+	<resultMap id="resultTeamMember" type="TeamMember">
+		<id column="team_member_no" property="team_member_no"/>
+		<result column="team_num" property="team_num"/>
+		<result column="user_no" property="user_no"/>
+		<result column="team_member_leader" property="team_member_leader"/>
+		<result column="team_member_date" property="team_member_date"/>
+		<association property="userVO" resultMap="resultUserInfo" />
+	</resultMap>
+	
+	<resultMap id="resultUserInfo" type="UserInfo">
+		<id column="user_no" property="user_no"/>
+		<result column="user_id" property="user_id"/>
+		<result column="user_nn" property="user_nn"/>
+		<result column="user_name" property="user_name"/>
+		<result column="user_pwd" property="user_pwd"/>
+		<result column="age" property="age"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+		<result column="phone" property="phone"/>
+		<result column="address" property="address"/>
+		<result column="interest" property="interest"/>
+		<result column="login_ok" property="login_ok"/>
+		<result column="admin" property="admin"/>
+	</resultMap>
+	
+	<!-- Alert 객체에 대한 정보 -->
+	<resultMap id="resultAlert" type="Alert">
+		<id column="alert_num" property="alert_num"/>
+		<result column="team_member_no" property="team_member_no"/>
+		<result column="team_num" property="team_num"/>
+		<result column="alert_cate" property="alert_cate"/>
+		<result column="alert_content" property="alert_content"/>
+		<result column="alert_date" property="alert_date"/>
+	</resultMap>
+	
+	<select id="selectMyTeamList" parameterType="_int" resultMap="resultTeamMember">
+		select * from tb_team_member
+		where user_no = #{ user_no }
+	</select>
+	
+	<insert id="insertAlertTSUpdate" parameterType="TeamMember">
+		insert into tb_alert (alert_num, team_member_no, team_num, alert_cate, alert_content, alert_date)
+		values ((select max(alert_num) + 1 from tb_alert), #{ team_member_no }, #{ team_num }, '팀 정보', '팀장님이 팀 정보를 변경하였습니다.', default)
+	</insert>
+	
+	<select id="selectAlertList" parameterType="_int" resultMap="resultAlert">
+		select *
+		from tb_alert
+		where team_member_no = #{ team_member_no }
+		order by alert_date desc
+	</select>
+	
+	<delete id="deleteAlertOne" parameterType="_int">
+		delete from tb_alert
+		where alert_num = #{ alert_num }
+	</delete>
+	
+	<delete id="deleteAlertAll" parameterType="_int">
+		delete from tb_alert
+		where team_member_no = #{ team_member_no }
+	</delete>
+	
+	<delete id="deleteTeamQuit" parameterType="_int">
+		delete from tb_team_member
+		where team_member_no = #{ team_member_no }
+	</delete>
+	
+	<insert id="insertAlertTBInsert" parameterType="TeamMember">
+		insert into tb_alert (alert_num, team_member_no, team_num, alert_cate, alert_content, alert_date)
+		values ((select max(alert_num) + 1 from tb_alert), #{ team_member_no }, #{ team_num }, '공지', '팀장님이 공지를 등록하였습니다.', default)
+	</insert>
+	
+	<insert id="insertAlertTMInsert" parameterType="TeamMember">
+		insert into tb_alert (alert_num, team_member_no, team_num, alert_cate, alert_content, alert_date)
+		values ((select max(alert_num) + 1 from tb_alert), #{ team_member_no }, #{ team_num }, '팀원', 
+				((select u.user_nn
+	            from tb_team_member tm 
+	            left join user_info u on tm.user_no = u.user_no
+	            where team_member_no = (select max(team_member_no) 
+	            						from tb_team_member 
+	            						where team_num = #{ team_num })) 
+	            || ' 님이 팀에 합류하였습니다.'), 
+	            default)
+	</insert>
+	
+	<insert id="insertAlertTMquit" parameterType="Alert">
+		insert into tb_alert (alert_num, team_member_no, team_num, alert_cate, alert_content, alert_date)
+		values ((select max(alert_num) + 1 from tb_alert), #{ team_member_no }, #{ team_num }, '팀원', 
+		       #{ alert_content }, default)
+	</insert>
+	
+	<insert id="insertAlertTMdelete" parameterType="Alert">
+		insert into tb_alert (alert_num, team_member_no, team_num, alert_cate, alert_content, alert_date)
+		values ((select max(alert_num) + 1 from tb_alert), #{ team_member_no }, #{ team_num }, '팀원', 
+		       #{ alert_content }, default)
+	</insert>
+	
+	<insert id="insertAlertTLupdate" parameterType="Alert">
+		insert into tb_alert (alert_num, team_member_no, team_num, alert_cate, alert_content, alert_date)
+		values ((select max(alert_num) + 1 from tb_alert), #{ team_member_no }, #{ team_num }, '팀장', 
+		       #{ alert_content }, default)
+	</insert>
+	
+</mapper>

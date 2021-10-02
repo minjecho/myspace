@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="teammanageMapper">
+	
+	<!-- UserInfo 객체에 대한 정보 -->
+	<resultMap id="resultUserInfo" type="UserInfo">
+		<id column="user_no" property="user_no"/>
+		<result column="user_id" property="user_id"/>
+		<result column="user_nn" property="user_nn"/>
+		<result column="user_name" property="user_name"/>
+		<result column="user_pwd" property="user_pwd"/>
+		<result column="age" property="age"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+		<result column="phone" property="phone"/>
+		<result column="address" property="address"/>
+		<result column="interest" property="interest"/>
+		<result column="login_ok" property="login_ok"/>
+		<result column="admin" property="admin"/>
+	</resultMap>
+
+	<!-- Team 객체에 대한 정보 -->
+	<resultMap id="resultTeam" type="Team">
+		<id column="team_num" property="team_num"/>
+		<result column="field_num" property="field_num"/>
+		<result column="team_name" property="team_name"/>
+		<result column="team_intro" property="team_intro"/>
+		<result column="team_leader_intro" property="team_leader_intro"/>
+		<result column="team_original_image" property="team_original_image"/>
+		<result column="team_rename_image" property="team_rename_image"/>
+		<result column="team_level" property="team_level"/>
+		<result column="team_local" property="team_local"/>
+		<result column="team_act_day" property="team_act_day"/>
+		<result column="team_act_week" property="team_act_week"/>
+		<result column="team_act_time" property="team_act_time"/>
+		<result column="team_fee" property="team_fee"/>
+		<result column="team_limit" property="team_limit"/>
+		<result column="team_recruit" property="team_recruit"/>
+	</resultMap>
+	
+	<!-- JoinWaiting 객체에 대한 정보 -->
+	<resultMap id="resultJoinWaiting" type="JoinWaiting">
+		<id column="join_num" property="join_num"/>
+		<result column="team_num" property="team_num"/>
+		<result column="user_no" property="user_no"/>
+		<result column="join_intro" property="join_intro"/>
+		<result column="join_original_filename" property="join_original_filename"/>
+		<result column="join_rename_filename" property="join_rename_filename"/>
+		<association property="userVO" resultMap="resultUserInfo" />
+	</resultMap>
+	
+	<!-- TeamMember 객체에 대한 정보 -->
+	<resultMap id="resultTeamMember" type="TeamMember">
+		<id column="team_member_no" property="team_member_no"/>
+		<result column="team_num" property="team_num"/>
+		<result column="user_no" property="user_no"/>
+		<result column="team_member_leader" property="team_member_leader"/>
+		<result column="team_member_date" property="team_member_date"/>
+		<association property="userVO" resultMap="resultUserInfo" />
+	</resultMap>
+	
+	<!-- Field 객체에 대한 정보 -->
+	<resultMap id="resultField" type="Field">
+		<id column="field_num" property="field_num"/>
+		<result column="field_name" property="field_name"/>
+	</resultMap>
+	
+	<select id="selectTeamSetting" parameterType="_int" resultMap="resultTeam">
+		select * from tb_team
+		where team_num = #{ team_num }
+	</select>
+	
+	<update id="updateTeamSetting" parameterType="Team">
+		update tb_team
+		set field_num = #{ field_num },  
+		   team_intro = #{ team_intro },
+		   team_leader_intro = #{ team_leader_intro }
+		   <if test="team_original_image != null">
+		   , team_original_image = #{ team_original_image }
+		   , team_rename_image = #{ team_rename_image }
+		   </if>
+		   <if test="team_original_image == null">
+		   , team_original_image = null
+		   , team_rename_image = null
+		   </if>
+		   , team_level = #{ team_level }, 
+		   team_local = #{ team_local }, 
+		   team_act_day = #{ team_act_day }, 
+		   team_act_week = #{ team_act_week } 
+		   <if test="team_act_time != null">
+		   , team_act_time = #{ team_act_time } 
+		   </if>
+		   , team_fee = #{ team_fee }, 
+		   team_limit = #{ team_limit }, 
+		   team_recruit = #{ team_recruit }
+		where team_num = #{ team_num } 
+	</update>
+	
+	<select id="selectJoinMemberList" parameterType="_int" resultMap="resultJoinWaiting">
+		select *
+		from tb_join_waiting j
+		left join user_info u on (j.user_no = u.user_no)
+		where team_num = #{ team_num }
+		order by join_num
+	</select>
+	
+	<select id="selectTeamMemberList" parameterType="_int" resultMap="resultTeamMember">
+		select *
+		from tb_team_member tm
+		left join user_info u on (tm.user_no = u.user_no)
+		where team_num = #{ team_num }
+		order by team_member_leader desc, team_member_date
+	</select>
+	
+	<select id="selectJoinMember" parameterType="_int" resultMap="resultJoinWaiting">
+		select *
+		from tb_join_waiting j
+		left join user_info u on (j.user_no = u.user_no)
+		where join_num = #{ join_num }
+	</select>
+	
+	<insert id="insertTeamMember" parameterType="JoinWaiting">
+		insert into tb_team_member (team_member_no, team_num, user_no, team_member_leader, team_member_date)
+		values ((select max(team_member_no) + 1 from tb_team_member), #{ team_num }, #{ user_no }, DEFAULT, DEFAULT)
+	</insert>
+	
+	<delete id="deleteJoinMember" parameterType="_int">
+		delete from tb_join_waiting
+		where join_num = #{ join_num }
+	</delete>
+	
+	<select id="selectTeamMember" parameterType="_int" resultMap="resultTeamMember">
+		select *
+		from tb_team_member tm
+		left join user_info u on (tm.user_no = u.user_no)
+		where team_member_no = #{ team_member_no }
+	</select>
+	
+	<select id="selectTeamLeader" parameterType="_int" resultMap="resultTeamMember">
+		select *
+		from tb_team_member tm
+		left join user_info u on (tm.user_no = u.user_no)
+		where team_num = #{ team_num } and team_member_leader = 'Y'
+	</select>
+	
+	<update id="updateTeamMemberRankDown" parameterType="TeamMember">
+		update tb_team_member
+		set team_member_leader = 'N'
+		where team_member_no = #{ team_member_no }
+	</update>
+	
+	<update id="updateTeamMemberRankUp" parameterType="TeamMember">
+		update tb_team_member
+		set team_member_leader = 'Y'
+		where team_member_no = #{ team_member_no }
+	</update>
+	
+	<delete id="deleteTeamMember" parameterType="_int">
+		delete from tb_team_member
+		where team_member_no = #{ team_member_no }
+	</delete>
+	
+	<select id="selectTeamMemberNormalList" parameterType="_int" resultMap="resultTeamMember">
+		select *
+		from tb_team_member tm
+		left join user_info u on (tm.user_no = u.user_no)
+		where team_num = #{ team_num } and team_member_leader = 'N'
+	</select>
+	
+	<select id="selectUserNoTeamMember" parameterType="TeamMember" resultMap="resultTeamMember">
+		select *
+		from tb_team_member tm
+		left join user_info u on (tm.user_no = u.user_no)
+		where u.user_no = #{ user_no } and tm.team_num = #{ team_num }
+	</select>
+	
+	<!-- 지역별 모임 갯수 출력 -->
+	<select id="getLocalListCount" parameterType="String" resultType="int">
+		select count(*) from tb_team where team_local like #{keyword} || '%'
+	</select>
+	
+	<select id="selectTeamMemberCount" parameterType="_int" resultType="_int">
+		select count(*)
+		from tb_team_member
+		where team_num = #{ team_num }
+	</select>
+
+</mapper>

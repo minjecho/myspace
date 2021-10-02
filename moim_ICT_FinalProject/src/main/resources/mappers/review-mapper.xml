@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="reviewMapper">
+
+	<!-- review 객체에 대한 정보 -->
+	<resultMap id="resultReview" type="Review">
+		<id column="review_no" property="review_no"/>
+		<result column="team_name" property="team_name"/>
+		<result column="field_name" property="field_name"/>
+		<result column="review_title" property="review_title"/>
+		<result column="review_writer" property="review_writer"/>
+		<result column="review_content" property="review_content"/>
+		<result column="review_grade" property="review_grade"/>
+		<result column="review_original_filepath" property="review_original_filepath"/>
+		<result column="review_rename_filepath" property="review_rename_filepath"/>
+		<result column="review_readcount" property="review_readcount"/>
+		<result column="review_date" property="review_date"/>
+	<!-- 	<collection property="userTeamList" resultMap="resultUser"/> -->
+	</resultMap>
+	
+	<resultMap id="resultUser" type="com.finalp.moim.review.model.vo.UserTeam">
+		<id column="user_no" property="user_no"/>
+		<result column="team_num" property="team_num"/>
+		<result column="team_member_no" property="team_member_no"/>
+		<result column="team_member_leader" property="team_member_leader"/>
+		<result column="team_name" property="team_name"/>
+		<result column="field_num" property="field_num"/>
+		<result column="field_name" property="field_name"/>
+	</resultMap> 
+	
+	<select id="selectListCount" resultType="int">
+		select count(*) from review
+	</select>
+	
+	<!-- 페이지 안의 게시글 리스트 조회 -->
+	<select id="selectList" parameterType="Page" resultMap="resultReview">
+		select * from
+		(select rownum rnum, review_no, team_name, field_name, review_title, review_writer, review_content, review_grade, 
+			   review_original_filepath, review_rename_filepath, review_readcount, review_date
+		from (select * from review order by review_no desc)
+			  )
+		where rnum between #{ startRow } and #{ endRow } 
+	</select>
+	
+	<select id="selectOne" parameterType="_int" resultMap="resultReview">
+		select * from review
+		where review_no = #{ review_no }
+	</select>
+	
+	<update id="addReadCount" parameterType="_int">
+		update review
+		set review_readcount = review_readcount + 1
+		where review_no = #{review_no}
+	</update>
+	
+	<insert id="insertReview" parameterType="Review">
+		insert into review (review_no, team_name, field_name, review_title, review_writer, review_content, review_grade, 
+		review_original_filepath, review_rename_filepath, review_readcount, review_date)
+		 values ((select max(review_no) + 1 from review), #{team_name}, #{field_name}, #{review_title}, #{review_writer}, 
+		 #{review_content}, #{review_grade}, #{review_original_filepath}, #{review_rename_filepath}, #{review_readcount}, sysdate)
+	</insert>
+	
+	<select id="selectUserTeam" resultMap="resultUser" parameterType="_int">
+		select * from (select m.user_no, m.team_num, m.team_member_no, m.team_member_leader, t.team_name, f.field_num, f.field_name 
+                from tb_team_member m join tb_team t on m.team_num = t.team_num
+                join tb_field f on t.field_num = f.field_num)
+		where user_no = #{user_no}
+	</select>
+	
+	<select id="selectTeamField" resultType="string" parameterType="string">
+		select field_name from (select team_name, field_name
+                from tb_team t join tb_field f on t.field_num = f.field_num)
+            where team_name = #{team_name}
+	</select>
+	
+	<update id="updateReview" parameterType="Review">
+		update review 
+		set review_title = #{review_title},
+		review_content = #{review_content},
+		review_grade = #{ review_grade }
+		<if test="review_original_filepath != null">
+		, review_original_filepath = #{review_original_filepath}
+		, review_rename_filepath = #{review_rename_filepath} 
+		</if>
+		<if test="review_original_filepath == null">
+		, review_original_filepath = null
+		, review_rename_filepath = null
+		</if>
+		where review_no = #{ review_no }
+	</update>
+	
+	<delete id="deleteReview" parameterType="_int">
+		delete from review where review_no = #{review_no}
+	</delete>
+	
+	<!-- 키워드 하나로 분류,제목,작성자, 날짜 모두 검색 -->
+	<select id="selectSearchReviewCount"  parameterType="String" resultType="_int">
+		select count(*) from
+		(select * from review where review_title like '%' || #{keyword} || '%' 
+								or field_name like '%' || #{keyword} || '%' 
+								or review_writer like '%' || #{keyword} || '%' )
+			
+							
+	</select>
+	
+	<select id="selectSearchReview" parameterType="com.finalp.moim.review.model.vo.SearchReview" resultMap="resultReview">
+		select * from
+		(select rownum rnum, review_no, team_name, field_name, review_title, review_writer, review_content, review_grade, 
+			   review_original_filepath, review_rename_filepath, review_readcount, review_date
+				  from review where review_title like '%' || #{keyword} || '%' 
+								or field_name like '%' || #{keyword} || '%' 
+								or review_writer like '%' || #{keyword} || '%' 
+								order by review_no desc )
+			where rnum between #{ startRow } and #{ endRow } 
+	
+	</select>
+	
+	<select id="selectMyReview" parameterType="com.finalp.moim.mypage.model.vo.MyPost" resultMap="resultReview">
+		select * from
+		(select rownum rnum, review_no, team_name, field_name, review_title, review_writer,	 review_readcount, review_date
+			   
+		from (select * from review where review_writer = #{ user_nn } order by review_no desc)
+			  )
+		where rnum between #{ startRow } and #{ endRow } 
+	</select>
+	
+	<select id="selectMyReviewCount" parameterType="string" resultType="int">
+		select count(*) from review where review_writer = #{ user_nn }
+	</select>
+	
+	</mapper>

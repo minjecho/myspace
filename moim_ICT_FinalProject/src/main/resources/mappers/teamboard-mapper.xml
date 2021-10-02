@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="teamboardMapper">
+	
+	<!-- UserInfo 객체에 대한 정보 -->
+	<resultMap id="resultUserInfo" type="UserInfo">
+		<id column="user_no" property="user_no"/>
+		<result column="user_id" property="user_id"/>
+		<result column="user_nn" property="user_nn"/>
+		<result column="user_name" property="user_name"/>
+		<result column="user_pwd" property="user_pwd"/>
+		<result column="age" property="age"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+		<result column="phone" property="phone"/>
+		<result column="address" property="address"/>
+		<result column="interest" property="interest"/>
+		<result column="login_ok" property="login_ok"/>
+		<result column="admin" property="admin"/>
+	</resultMap>
+	
+	<!-- TeamBoard 객체에 대한 정보 -->
+	<resultMap id="resultTeamBoard" type="TeamBoard">
+		<id column="tn_no" property="tn_no"/>
+		<result column="team_num" property="team_num"/>
+		<result column="tn_writer" property="tn_writer"/>
+		<result column="tn_title" property="tn_title"/>
+		<result column="tn_content" property="tn_content"/>
+		<result column="tn_date" property="tn_date"/>
+		<result column="tn_originalfilename" property="tn_originalfilename"/>
+		<result column="tn_renamefilename" property="tn_renamefilename"/>
+		<association property="userVO" resultMap="resultUserInfo" />
+	</resultMap>
+	
+	<select id="selectTeamBoardList" parameterType="_int" resultMap="resultTeamBoard">
+		select * 
+		from teamnotice tn
+		left join user_info ui on (tn.tn_writer = ui.user_no)
+		where team_num = 1
+		order by tn_date desc
+	</select>
+	
+	<select id="selectTeamBoard" parameterType="_int" resultMap="resultTeamBoard">
+		select * 
+		from teamnotice tn
+		left join user_info ui on (tn.tn_writer = ui.user_no)
+		where tn_no = #{ tn_no }
+	</select>
+	
+	<update id="updateTeamBoard" parameterType="TeamBoard">
+		update teamnotice
+		set tn_title = #{ tn_title },
+		tn_content = #{ tn_content },
+		tn_date = sysdate
+		<if test="tn_originalfilename != null">
+	    , tn_originalfilename = #{ tn_originalfilename }
+	    , tn_renamefilename = #{ tn_renamefilename }
+	    </if>
+	    <if test="tn_originalfilename == null">
+	    , tn_originalfilename = null
+	    , tn_renamefilename = null
+	    </if>
+		where tn_no = #{ tn_no }
+	</update>
+	
+	<insert id="insertTeamBoard" parameterType="TeamBoard">
+		insert into teamnotice
+		values((select max(tn_no)+1 from teamnotice), #{ team_num }, #{ tn_writer }, #{ tn_title }, #{ tn_content }, sysdate
+		<if test="tn_originalfilename!=null">
+		, #{ tn_originalfilename }, #{ tn_renamefilename }
+		</if>
+		<if test="tn_originalfilename==null">
+		, null, null
+		</if>
+		)
+	</insert>
+	
+	<delete id="deleteTeamBoard" parameterType="_int">
+		delete from teamnotice
+		where tn_no = #{ tn_no }
+	</delete>
+	
+	<select id="selectBoardTopList" parameterType="_int" resultMap="resultTeamBoard">
+		select *
+		from (select rownum, tn_no, team_num, tn_writer, user_nn, tn_title, tn_content, tn_date, tn_originalfilename, tn_renamefilename 
+		        from teamnotice tn 
+		        left join user_info ui on (tn.tn_writer = ui.user_no) 
+		        where team_num = #{ team_num } 
+		        order by tn_date desc) 
+		where rownum between 1 and 10
+	</select>
+	
+</mapper>

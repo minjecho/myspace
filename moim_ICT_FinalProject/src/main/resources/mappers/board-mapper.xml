@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="boardMapper">
+	
+	<!-- UserInfo 객체에 대한 정보 -->
+	<resultMap id="resultUserInfo" type="UserInfo">
+		<id column="user_no" property="user_no"/>
+		<result column="user_id" property="user_id"/>
+		<result column="user_nn" property="user_nn"/>
+		<result column="user_name" property="user_name"/>
+		<result column="user_pwd" property="user_pwd"/>
+		<result column="age" property="age"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+		<result column="phone" property="phone"/>
+		<result column="address" property="address"/>
+		<result column="interest" property="interest"/>
+		<result column="login_ok" property="login_ok"/>
+		<result column="admin" property="admin"/>
+	</resultMap>
+	
+	<!-- BoardCategory 객체에 대한 정보 -->
+	<resultMap id="resultCategory" type="BoardCategory">
+		<id column="board_category_no" property="board_category_no"/>
+		<result column="board_category_name" property="board_category_name"/>
+	</resultMap>
+	
+	<!-- Board 객체에 대한 정보 -->
+	<resultMap id="resultBoard" type="Board">
+		<id column="board_no" property="board_no"/>
+		<result column="board_category_no" property="board_category_no"/>
+		<result column="user_no" property="user_no"/>
+		<result column="board_title" property="board_title"/>
+		<result column="board_content" property="board_content"/>
+		<result column="board_date" property="board_date"/>
+		<result column="board_original_filename" property="board_original_filename"/>
+		<result column="board_rename_filename" property="board_rename_filename"/>
+		<result column="board_readcount" property="board_readcount"/>
+		<association property="userVO" resultMap="resultUserInfo" />
+		<association property="cateVO" resultMap="resultCategory" />
+	</resultMap>
+
+	<!-- 전체 게시글 갯수 조회 -->
+	<select id="getListCount" resultType="int">
+		select count(*) from board
+	</select>
+	
+	<!-- 페이지 안의 게시글 리스트 조회 -->
+	<select id="selectList" parameterType="Page" resultMap="resultBoard">
+		select * from
+		(select rownum rnum, board_no, board_category_no, user_no, board_title, board_content, board_date, 
+			   board_original_filename, board_rename_filename, board_readcount
+		from (select * from board
+			  order by board_no desc)) b
+		left join user_info u on (b.user_no = u.user_no)
+		left join board_category c on (b.board_category_no = c.board_category_no)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<!-- 게시글 조회수 1 증가 -->
+	<update id="updateReadCount" parameterType="int">
+		update board set board_readcount = board_readcount + 1 where board_no = #{ board_no }
+	</update>
+	
+	<!-- 전달받은 글번호로 게시글 조회 -->
+	<select id="selectBoard" parameterType="int" resultMap="resultBoard">
+		select * from board where board_no = #{ board_no }
+	</select>
+	
+	<!-- 게시글 등록 -->
+	<insert id="insertBoard" parameterType="Board">
+		insert into board values(
+			(select max(board_no) + 1 from board), #{board_category_no}, #{user_no}, #{board_title}, #{board_content}, 
+			sysdate, #{board_original_filename}, #{board_rename_filename}, default
+		)
+	</insert>
+	
+	<!-- 게시글 수정 -->
+	<update id="updateBoard" parameterType="Board">
+		update board
+		set board_title = #{board_title}, board_content = #{board_content}
+		<if test="board_original_filename != null">
+			, board_original_filename = #{board_original_filename}, board_rename_filename = #{board_rename_filename}
+		</if>
+		<if test="board_original_filename == null">
+			, board_original_filename = null, board_rename_filename = null
+		</if>
+		where board_no = #{board_no}
+	</update>
+	
+	<!-- 게시글 삭제 -->
+	<delete id="deleteBoard" parameterType="int">
+		delete from board where board_no = #{board_no}
+	</delete>
+	
+	<!-- 전체 게시글 조회 -->
+	<select id="searchAll" parameterType="String" resultMap="resultBoard">
+		select * from board b
+		left join user_info u on (b.user_no = u.user_no)
+		left join board_category c on (b.board_category_no = c.board_category_no)
+		where board_title like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 공모전 게시글 조회 -->
+	<select id="searchContest" parameterType="String" resultMap="resultBoard">
+		select * from board b
+		left join user_info u on (b.user_no = u.user_no)
+		left join board_category c on (b.board_category_no = c.board_category_no)
+		where b.board_category_no = 1 and board_title like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 인턴십 게시글 조회 -->
+	<select id="searchIntern" parameterType="String" resultMap="resultBoard">
+		select * from board b
+		left join user_info u on (b.user_no = u.user_no)
+		left join board_category c on (b.board_category_no = c.board_category_no)
+		where b.board_category_no = 2 and board_title like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 자격증 게시글 조회 -->
+	<select id="searchLicense" parameterType="String" resultMap="resultBoard">
+		select * from board b
+		left join user_info u on (b.user_no = u.user_no)
+		left join board_category c on (b.board_category_no = c.board_category_no)
+		where b.board_category_no = 3 and board_title like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 이벤트 게시글 조회 -->
+	<select id="searchEvent" parameterType="String" resultMap="resultBoard">
+		select * from board b
+		left join user_info u on (b.user_no = u.user_no)
+		left join board_category c on (b.board_category_no = c.board_category_no)
+		where b.board_category_no = 4 and board_title like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 자유글 게시글 조회 -->
+	<select id="searchFree" parameterType="String" resultMap="resultBoard">
+		select * from board b
+		left join user_info u on (b.user_no = u.user_no)
+		left join board_category c on (b.board_category_no = c.board_category_no)
+		where b.board_category_no = 5 and board_title like '%' || #{keyword} || '%'
+	</select>
+	
+	<!-- 마이페이지 게시글 조회 -->
+	<select id="selectMyBoard" parameterType="com.finalp.moim.mypage.model.vo.MyBoard" resultMap="resultBoard">
+		select * from
+		(select rownum rnum, board_no, board_category_no, user_no, board_title, board_content, board_date, 
+			   board_original_filename, board_rename_filename, board_readcount
+		from (select * from board where user_no = #{ user_no }
+			  order by board_no desc)) b
+		left join user_info u on (b.user_no = u.user_no)
+		left join board_category c on (b.board_category_no = c.board_category_no)
+		where rnum between #{ startRow } and #{ endRow }
+	</select>
+	
+	<select id="selectMyBoardCount" parameterType="int" resultType="int">
+		select count(*) from board where user_no = #{ user_no }
+	</select>
+</mapper>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="teamcalendarMapper">
+	
+	<!-- UserInfo 객체에 대한 정보 -->
+	<resultMap id="resultUserInfo" type="UserInfo">
+		<id column="user_no" property="user_no"/>
+		<result column="user_id" property="user_id"/>
+		<result column="user_nn" property="user_nn"/>
+		<result column="user_name" property="user_name"/>
+		<result column="user_pwd" property="user_pwd"/>
+		<result column="age" property="age"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+		<result column="phone" property="phone"/>
+		<result column="address" property="address"/>
+		<result column="interest" property="interest"/>
+		<result column="login_ok" property="login_ok"/>
+		<result column="admin" property="admin"/>
+	</resultMap>
+	
+	<!-- TeamBoard 객체에 대한 정보 -->
+	<resultMap id="resultTeamCalendar" type="TeamCalendar">
+		<id column="cal_no" property="cal_no"/>
+		<result column="team_num" property="team_num"/>
+		<result column="cal_writer" property="cal_writer"/>
+		<result column="cal_title" property="cal_title"/>
+		<result column="cal_startdate" property="cal_startdate"/>
+		<result column="cal_enddate" property="cal_enddate"/>
+		<result column="cal_detail" property="cal_detail"/>
+		<association property="userVO" resultMap="resultUserInfo" />
+	</resultMap>
+	
+	<select id="selectCalendarList" parameterType="_int" resultMap="resultTeamCalendar">
+		select *
+		from calendar c
+		left join user_info ui on (c.cal_writer = ui.user_no)
+		where team_num = #{ team_num }
+	</select>
+	
+	<insert id="insertCalendar" parameterType="TeamCalendar">
+		insert into calendar
+		values((select max(cal_no)+1 from calendar), #{team_num}, #{cal_writer}, 
+		#{cal_title}, #{cal_startdate}, #{cal_enddate}, #{cal_detail})
+	</insert>
+	
+	<delete id="deleteCalendar" parameterType="_int">
+		delete calendar
+		where cal_no = #{ cal_no }
+	</delete>
+	
+	<update id="updateCalendar" parameterType="TeamCalendar">
+		update calendar
+		set cal_title = #{ cal_title },
+		cal_startdate = #{ cal_startdate },
+		cal_enddate = #{ cal_enddate },
+		cal_detail = #{ cal_detail }
+		where cal_no = #{ cal_no }
+	</update>
+	
+</mapper>

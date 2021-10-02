@@ -1,0 +1,153 @@
+[로깅(logging)]----------------------------------------------------------------------
+ : 시스템을 작동할 때 시스템의 작동상태의 기록/보존, 
+  이용자의 습성조사 및 시스템 동작의 분석 등을 하기 위해 
+  작동 중의 각종 정보를 기록하여 둘 필요가 있다. 
+
+  이 기록을 만드는 것을 로깅이라 한다. 
+  또 기록 자체를 로그(log)라고 하며, 
+  로그에는 일반적으로 다음과 같은 것이 있다.
+
+ (1) 작동로그 
+   : 시스템의 운전상태를 기록/보존하기 위한 센터 오퍼레이터에게 통지되는 
+    조작문, 지령문, 보고문(이들을 일반 로그라고 한다) 및 
+    하드웨어 장해정보(장해로그) 등의 기록, 작동로그를 조사함으로써 
+    하드웨어 장해상황, 콘솔 조작상황 등을 파악할 수 있다.
+
+ (2) 통계로그 
+   : 이용자의 습성조사, 시스템의 효율화를 목적으로 한 동작의 분석 
+    및 시스템설계의 기초 자료를 얻기 위한 CPU/메모리 사용 효율, 
+    회선 트래픽(traphic), 단말입출력 데이터량, 회선접속/절단시각 등의 기록
+
+
+ <스프링/마이바티스 로깅> -----------------------------------------------------
+
+ - 스프링/마이바티스는 내부 로그 팩토리를 사용하여 로깅 정보를 제공한다. 
+   내부 로그 팩토리는 로깅 정보를 다른 로그 구현체 중 하나에 전달한다. 
+
+	* SLF4J 
+	* Apache Commons Logging 
+	* Log4j 2 
+	* Log4j 
+	* JDK logging
+ 
+ - 로깅 솔루션은 내부 스프링/마이바티스 로그 팩토리의 런타임 체크를 통해 선택된다.
+
+ - 스프링/마이바티스 로그 팩토리는 가능하면 첫번째 구현체를 사용할 것이다
+   (위 로깅 구현체의 나열 순서는 내부적으로 선택하는 우선순위이다). 
+   만약 스프링/마이바티스가 위 구현체중 하나도 찾지 못한다면, 
+   로깅을 하지 않을 것이다. 
+
+ - Tomcat 또는 WebSphere 등의 애플리케이션 서버 환경에서는 
+   클래스패스의 일부로 JCL 을 사용한다. 
+   그러면 스프링/마이바티스는 로깅 구현체로 JCL을 사용할 것이다. 
+
+ - WebSphere 환경에서 Log4J 설정은 무시된다. 
+   WebSphere 는 자체 JCL 구현체를 제공한다. 
+   이 환경에서의 스프링/마이바티스는 Log4J 설정을 무시하고 JCL을 사용한다.
+
+ - 만약 애플리케이션이 클래스패스에 JCL을 포함한 환경에서 
+   다른 로깅 구현체 중 하나를 더 선호한다면, 
+   다음의 메서드 중 하나를 호출하여 다른 로깅 구현체를 선택할 수 있다. 
+
+   * org.apache.ibatis.logging.LogFactory.useSlf4jLogging();
+   * org.apache.ibatis.logging.LogFactory.useLog4JLogging();
+   * org.apache.ibatis.logging.LogFactory.useJdkLogging();
+   * org.apache.ibatis.logging.LogFactory.useCommonsLogging();
+   * org.apache.ibatis.logging.LogFactory.useStdOutLogging();
+
+   =>> 스프링/마이바티스가 메서드를 호출하기 전에 
+	위 메서드 중 하나를 호출해야 한다. 
+	이 메서드들은 런타임 클래스패스에 구현체가 존재하면 
+	그 로그 구현체를 사용하게 한다.	예를 들어, Log4j 로깅을 선택했지만 
+	런타임에 Log4j 구현체가 클래스패스에 없다면, 
+	마이바티스는 Log4j 구현체의 사용을 무시하고 
+	다른 로깅 구현체를 찾아 다시 사용할 것이다. 
+
+ - 참조 사이트
+   * SLF4J 
+	http://www.slf4j.org/
+   * Apache Commons Logging
+	http://commons.apache.org/proper/commons-logging/ 
+   * Apache Log4j
+	http://logging.apache.org/log4j/2.x/
+   * JDK Logging API 
+	http://www.oracle.com/technetwork/java/index.html
+
+
+ <LOG4j의 Logging 설정(Configuration)> -----------------------------
+
+ - LOG4j를 이용해서 스프링/마이바티스의 로깅 구문을 출력하기 위해서는
+   하나 이상의 설정파일(log4j.properties)과 
+   몇 개의 새로운 jar파일(log4j.jar)이 필요하다. 
+
+ - 1단계 : log4j.jar 파일 추가하기 
+	아래 URL에서 Log4J를 다운로드한다. 
+
+	http://logging.apache.org/log4j/2.x/
+
+	애플리케이션에 WEB-INF/lib 폴더에 log4j.jar 파일을 추가한다.
+	
+ - 2단계 : Log4j 프로퍼티 설정하기 
+	일반적으로 log4j.properties 파일은 클래스패스에 저장하여 사용함
+
+	Log4j는 3개의 element 제공
+	* logger : 로깅 메시지를 appender에 전달한다.
+	* appender.* : 로깅 메시지의 출력 방법을 지정한다.
+	* layout : 출력 형식을 지정한다.
+
+	=> appender에 메시지 수준에 대한 레벨을 기술한다.
+
+	* FATAL : 가장 치명적인 오류 메시지
+	* ERROR : 일반적인 오류 메시지
+	* WARN : 경고성 오류 발생 메시지
+	* INFO : 일반적인 정보 메시지
+	* DEBUG : 상세 정보 메시지
+	* TRACE : 추적 정보 메시지
+
+	=> layout에 사용되는 출력 형식요소
+	* %p : debug, info, error, fatal과 같은 레벨의 순위 출력
+	* %m : 로그 내용 출력
+	* %d : 로깅 이벤트가 발생한 시간을 기록
+	* %t : 로그 이벤트가 발생된 쓰래드의 이름 출력
+	* %n : 플랫폼 종속적인 개행 문자 출력. \r\n 또는 \n
+	* %c : 카테고리 표시
+	* %C : 클래스명 표시
+	* %F : 로깅이 발생한 프로그램 파일명 표시
+	* %I : 로깅이 발생한 정보 표시
+	* %L : 로깅이 발생한 라인수 표시
+	* %M : 로깅이 발생한 메서드명 표시
+
+	=> 전역적인 로깅 처리 구문 예
+	  #Global logging configuration -- 주석
+	  log4j.rootLogger=ERROR, stdout 
+	  -- stdout appender에 에러 메시지 출력
+
+	=> 마이바티스의 매퍼 로깅 처리 구문 예
+	  : 매퍼 파일 전체의 SQL 구문의 결과 출력
+	  #MyBatis logging configuration
+	  log4j.logger.dept.dao.DeptMapper=TRACE
+
+	  : 전체 매퍼 대신에 매퍼 XML에서 
+	   "id"의 네임스페이스가 "selectDepartment"의
+	   SQL 구문만 결과 출력
+	  #MyBatis logging configuration
+	  log4j.logger.dept.dao.DeptMapper.selectDepartment=TRACE
+
+	  : 쿼리의 결과가 아닌 SQL문을 보고자 할 때는 DEBUG 로 지정
+	  log4j.logger.dept.dao=DEBUG 
+
+
+
+ <log4j.properties 파일 예> -------------------------------------------
+
+# Global logging configuration
+log4j.rootLogger=ERROR, stdout
+# MyBatis logging configuration...
+log4j.logger.com.example.BlogMapper=TRACE
+# Console output...
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
+
+------------------------------------------------------------------------------
+

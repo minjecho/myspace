@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="teamdailyMapper">
+	
+	<!-- UserInfo 객체에 대한 정보 -->
+	<resultMap id="resultUserInfo" type="UserInfo">
+		<id column="user_no" property="user_no"/>
+		<result column="user_id" property="user_id"/>
+		<result column="user_nn" property="user_nn"/>
+		<result column="user_name" property="user_name"/>
+		<result column="user_pwd" property="user_pwd"/>
+		<result column="age" property="age"/>
+		<result column="gender" property="gender"/>
+		<result column="email" property="email"/>
+		<result column="phone" property="phone"/>
+		<result column="address" property="address"/>
+		<result column="interest" property="interest"/>
+		<result column="login_ok" property="login_ok"/>
+		<result column="admin" property="admin"/>
+	</resultMap>
+	
+	<!-- TeamBoard 객체에 대한 정보 -->
+	<resultMap id="resultTeamDaily" type="TeamDaily">
+		<id column="daily_no" property="daily_no"/>
+		<result column="team_num" property="team_num"/>
+		<result column="daily_writer" property="daily_writer"/>
+		<result column="daily_date" property="daily_date"/>
+		<result column="daily_content" property="daily_content"/>
+		<result column="daily_progress" property="daily_progress"/>
+		<association property="userVO" resultMap="resultUserInfo" />
+	</resultMap>
+	
+	<select id="selectTeamDailyList" parameterType="_int" resultMap="resultTeamDaily">
+		select *
+		from daily d
+		left join user_info ui on (d.daily_writer = ui.user_no)
+		where team_num = #{ team_num }
+		order by daily_no desc
+	</select>
+	
+	<insert id="insertTeamDaily" parameterType="TeamDaily">
+		insert into daily
+		values((select max(daily_no)+1 from daily),#{ team_num }, #{ daily_writer }, #{ daily_date }, #{ daily_content }, 1)
+	</insert>
+	
+	<update id="updateDailyProgress" parameterType="_int">
+		update daily
+		set daily_progress = daily_progress+1
+		where daily_no = #{ daily_no }
+	</update>
+	
+	<delete id="deleteDaily" parameterType="_int">
+		delete daily
+		where daily_no = #{ daily_no }
+	</delete>
+	
+</mapper>
